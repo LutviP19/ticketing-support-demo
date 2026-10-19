@@ -48,3 +48,5 @@ pgdata/
 # Mengabaikan file sampah sistem operasi (Ubuntu/Linux & macOS)
 .DS_Store
 .Thumb.db
+
+NOTES.txt
