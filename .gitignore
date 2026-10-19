@@ -1,0 +1,50 @@
+# =====================================================================
+# ENVIRONMENT VARIABLES & SECRETS
+# =====================================================================
+# Mengabaikan file kredensial database dan port API lokal Anda
+.env
+.env.local
+.env.*.local
+
+# =====================================================================
+# PYTHON & VIRTUAL ENVIRONMENT
+# =====================================================================
+# Mengabaikan folder virtual environment lokal
+.venv/
+venv/
+ENV/
+env/
+
+# Mengabaikan bytecode hasil kompilasi Python otomatis
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Mengabaikan folder distribusi/build Python (jika ada)
+.eggs/
+build/
+dist/
+*.egg-info/
+
+# =====================================================================
+# DOCKER & DATABASE PERSISTENCE
+# =====================================================================
+# Mengabaikan folder penyimpanan volume database internal PostgreSQL Docker
+# agar data lokal tidak tidak sengaja terunggah ke repositori
+pgdata/
+.docker-data/
+
+# =====================================================================
+# LOGS & TEMPORARY FILES
+# =====================================================================
+*.log
+*.log.*
+.cache/
+.pytest_cache/
+
+# =====================================================================
+# OPERATING SYSTEM SPECIFIC
+# =====================================================================
+# Mengabaikan file sampah sistem operasi (Ubuntu/Linux & macOS)
+.DS_Store
+.Thumb.db

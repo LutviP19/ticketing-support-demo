@@ -1,0 +1,50 @@
+{% for log in logs %}
+<!-- Ditambahkan cursor-pointer agar pengguna tahu baris ini bisa diklik, 
+     serta fungsi openModal yang membawa data manifestasi database murni -->
+<tr onclick="openModal('{{ log.id }}', '{{ log.final_state_sent | escape }}', {{ log.raw_response_json | tojson | safe | forceescape }})" 
+    class="hover:bg-gray-750/50 transition-colors cursor-pointer {% if loop.first %}bg-emerald-950/40 border-l-4 border-emerald-500 animate-pulse-once{% endif %}">
+    <td class="p-4 text-center font-mono {% if loop.first %}text-emerald-400 font-bold{% else %}text-gray-500{% endif %}">
+        {{ log.id }}
+    </td>
+    <td class="p-4">
+        <span class="px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-mono rounded">
+            {{ log.model_name }}
+        </span>
+    </td>
+    <td class="p-4 max-w-xs truncate text-gray-300" title="{{ log.final_state_sent }}">
+        {{ log.final_state_sent }}
+    </td>
+    <td class="p-4">
+        <div class="space-y-1">
+            {% for key, val in log.answers.items() %}
+            <div class="text-xs">
+                <span class="text-amber-400 font-mono">{{ key }}:</span> 
+                <span class="font-semibold text-gray-200">
+                    {% if val.choice is defined %}
+                        {{ val.choice }}
+                    {% elif val.noul is defined %}
+                        {{ val.noul }}
+                    {% elif val.decision is defined %}
+                        {{ val.decision }}
+                    {% elif val.score is defined %}
+                        {{ val.score }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </td>
+    <td class="p-4 text-center font-mono font-medium {% if log.execution_time_ms > 200 %}text-rose-400{% else %}text-emerald-400{% endif %}">
+        {{ log.execution_time_ms }}ms
+    </td>
+    <td class="p-4 text-xs text-gray-400 font-mono">
+        {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="6" class="p-8 text-center text-gray-500 italic">Belum ada log eksekusi yang terekam di database.</td>
+</tr>
+{% endfor %}

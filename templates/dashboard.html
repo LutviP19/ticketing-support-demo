@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticketing Support Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@4.0.0" integrity="sha384-BvJpBiO8Kh31EqtJe5DRIeWrHWnCGkwytKs9NKFi86Hhw96dEqdEMzZDeK9iEGTc" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+    <!-- Native Tailwind v4 Theme Configuration -->
+    <style type="text/tailwindcss">
+        @theme {
+            --animate-pulse-once: pulseOnce 2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+
+            @keyframes pulseOnce {
+                0% { background-color: rgba(16, 185, 129, 0.3); }
+                100% { background-color: transparent; }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b border-gray-800 pb-6 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-emerald-400">📊 Ticketing Support - Demo</h1>
+                <p class="text-gray-400 text-sm mt-1">Real-time log audit dan performa Model Routing Ollama</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs text-gray-400 font-mono">Live Sync</span>
+            </div>
+        </div>
+
+        <!-- Form Input Triage Simulasi -->
+        <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 p-6 mb-8">
+            <h3 class="font-semibold text-gray-300 mb-4">Simulasi Input Tiket Pelanggan</h3>
+            <form 
+                id="ticket-form" 
+                hx-post="/dashboard/submit" 
+                hx-target="#log-table-body" 
+                hx-swap="innerHTML"
+                hx-on::after-request="if(event.detail.successful) this.reset()"
+                class="space-y-4">
+                <div>
+                    <label for="user_message" class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Pesan / Keluhan Pengguna</label>
+                    <textarea id="user_message" name="user_message" rows="3" required placeholder="Contoh: Tolong, sistem billing mendadak error..." class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-gray-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"></textarea>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label for="decision_set_id" class="block text-xs text-gray-400 font-semibold mb-1">Set Pertanyaan (ID)</label>
+                        <input type="number" id="decision_set_id" name="decision_set_id" value="1" class="w-20 bg-gray-900 border border-gray-700 rounded p-1.5 text-xs text-center font-mono text-gray-100 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm rounded-lg transition-colors shadow-lg">🚀 Kirim & Evaluasi Jev</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Grafik Batang Latensi -->
+        <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-gray-300">Tren Rata-Rata Latensi Model (Per Menit)</h3>
+                
+                <!-- Tombol Reload Manual khusus Chart menggunakan htmx v4 -->
+                <button 
+                    hx-get="/dashboard/chart-data" 
+                    hx-swap="none"
+                    id="btn-refresh-chart"
+                    class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-850 text-xs font-medium text-gray-200 rounded transition-colors flex items-center space-x-1 cursor-pointer">
+                    <span>🔄 Refresh Grafik</span>
+                </button>
+            </div>
+            <div class="h-64 relative">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+
+
+        <!-- Tabel Log Riwayat -->
+        <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden">
+            <div class="p-4 bg-gray-850 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-300">Riwayat Eksekusi Terbaru</h3>
+                <button hx-get="/dashboard/table" hx-target="#log-table-body" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs font-medium transition-colors">🔄 Refresh Manual</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-750 text-gray-400 text-xs uppercase font-semibold border-b border-gray-700">
+                            <th class="p-4 w-12 text-center">ID</th>
+                            <th class="p-4 w-32">Model</th>
+                            <th class="p-4">Final State Sent</th>
+                            <th class="p-4 w-36">Hasil Keputusan</th>
+                            <th class="p-4 w-24 text-center">Latensi</th>
+                            <th class="p-4 w-40">Waktu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-table-body" hx-get="/dashboard/table" hx-trigger="every 15s" hx-swap="innerHTML" class="divide-y divide-gray-700 text-sm">
+                        {% include 'table_partial.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Container Kontainer Modal Overlays (Tersembunyi secara default) -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl p-6 transform scale-95 transition-transform duration-300 max-h-[85vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
+                <h3 class="text-lg font-bold text-emerald-400 flex items-center space-x-2">
+                    <span>🔍 Detail Log Audit #<span id="modal-log-id">0</span></span>
+                </h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200 transition-colors cursor-pointer text-xl font-semibold">&times;</button>
+            </div>
+            
+            <!-- Modal Content (Scrollable jika teks terlalu panjang) -->
+            <div class="space-y-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
+                <div>
+                    <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Final State Sent (Prompt Context)</h4>
+                    <div id="modal-final-state" class="bg-gray-900 border border-gray-750 p-3 rounded-lg text-sm text-gray-300 font-sans whitespace-pre-wrap break-all"></div>
+                </div>
+                
+                <div>
+                    <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Raw JSON Response (Ollama Answers Schema)</h4>
+                    <pre id="modal-raw-json" class="bg-gray-900 border border-gray-750 p-3 rounded-lg text-xs text-amber-400 font-mono overflow-x-auto whitespace-pre"></pre>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="border-b border-gray-700/0 pt-4 mt-4 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-750 hover:bg-gray-700 active:bg-gray-850 text-gray-200 text-xs font-medium rounded-lg transition-colors cursor-pointer">
+                    Tutup Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Sediakan variabel global untuk menyimpan instance grafik
+        let latencyChart = null;
+
+        /**
+         * Fungsi dinamis untuk menginisialisasi atau memperbarui grafik
+         * @param {Array} labels - Kumpulan label sumbu X (menit)
+         * @param {Array} values - Kumpulan nilai sumbu Y (latensi ms)
+         */
+        function initOrUpdateChart(labels, values) {
+            const ctx = document.getElementById('latencyChart').getContext('2d');
+
+            // Jika instance grafik sudah ada, tinggal update datanya saja (Dinamis)
+            if (latencyChart) {
+                latencyChart.data.labels = labels;
+                latencyChart.data.datasets[0].data = values;
+                latencyChart.update();
+                console.log("[*] Grafik berhasil diperbarui dengan data JSON dinamis.");
+                return;
+            }
+
+            // Jika belum ada, lakukan inisialisasi awal (Pertama kali halaman dimuat)
+            latencyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Rata-rata Latensi (ms)',
+                        data: values,
+                        backgroundColor: 'rgba(52, 211, 153, 0.6)',
+                        borderColor: 'rgba(52, 211, 153, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(75, 85, 99, 0.2)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f3f4f6' } } }
+                }
+            });
+            console.log("[*] Grafik berhasil diinisialisasi pertama kali.");
+        }
+
+        // Interseptor htmx v4 untuk mendeteksi pengiriman form
+        document.body.addEventListener('htmx:config-request', function(evt) {
+            // Memastikan event pemicu berasal dari form tiket kita
+            if (evt.detail.elt.id === 'ticket-form') {
+                console.log("[*] Form disubmit! Mematikan fitur auto-refresh tabel...");
+                
+                const tableBody = document.getElementById('log-table-body');
+                if (tableBody) {
+                    // Menghapus atribut hx-trigger untuk menghentikan siklus polling interval secara permanen
+                    tableBody.removeAttribute('hx-trigger');
+                    
+                    // Opsional: Berikan indikator visual pasif di konsol browser Anda
+                    tableBody.setAttribute('data-polling-status', 'disabled');
+                }
+            }
+        });
+
+        // =====================================================================
+        // JALANKAN FUNGSINYA BERDASARKAN EVENT LIFECYCLE
+        // =====================================================================
+
+        // 1. Jalankan pertama kali saat halaman dimuat menggunakan data Jinja2
+        initOrUpdateChart(
+            {{ chart_labels | tojson | safe }}, 
+            {{ chart_values | tojson | safe }}
+        );
+
+        // 2. Sinkronisasi otomatis saat HTMX v4 melakukan swap tabel baru
+        document.body.addEventListener('htmx:after-swap', function(evt) {
+            if (evt.detail.target.id === 'log-table-body') {
+                fetch('/dashboard/chart-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Cukup panggil fungsi yang sama dengan parameter data JSON dinamis
+                        initOrUpdateChart(data.labels, data.values);
+                    });
+            }
+        });
+
+        // 3. Sinkronisasi manual saat tombol "Refresh Grafik" ditekan
+        document.getElementById('btn-refresh-chart').addEventListener('htmx:after-request', function(evt) {
+            if (evt.detail.successful) {
+                const data = JSON.parse(evt.detail.xhr.responseText);
+                // Panggil fungsi dengan parameter data JSON hasil interseptor tombol
+                initOrUpdateChart(data.labels, data.values);
+            }
+        });
+
+        
+
+
+        /**
+         * Fungsi untuk membuka popup modal dan menyuntikkan data log audit
+         * @param {string|number} id - ID Log Database
+         * @param {string} finalState - Prompt utuh yang dikirim ke Ollama
+         * @param {Object} rawJson - Payload respon asli dari model Jev
+         */
+        function openModal(id, finalState, rawJson) {
+            // Suntikkan data dinamis ke elemen modal internal
+            document.getElementById('modal-log-id').innerText = id;
+            document.getElementById('modal-final-state').innerText = finalState;
+            
+            // Format objek JSON menjadi string cantik ber-inden rincian 2 spasi
+            document.getElementById('modal-raw-json').innerText = JSON.stringify(rawJson, null, 2);
+            
+            const modal = document.getElementById('detail-modal');
+            const innerContent = modal.firstElementChild;
+            
+            // Hapus kelas tersembunyi dan terapkan animasi memudar lembut
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                innerContent.classList.remove('scale-95');
+                innerContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        /**
+         * Fungsi untuk menutup popup modal dengan animasi pemudaran kembali
+         */
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
+            const innerContent = modal.firstElementChild;
+            
+            modal.classList.add('opacity-0');
+            innerContent.classList.remove('scale-100');
+            innerContent.classList.add('scale-95');
+            
+            // Beri waktu animasi CSS selesai selama 300ms sebelum menambahkan flag hidden kembali
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Opsional: Tutup modal secara otomatis jika pengguna mengklik area luar hitam (overlay backdrop)
+        window.onclick = function(event) {
+            const modal = document.getElementById('detail-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+    </script>
+
+
+</body>
+</html>
