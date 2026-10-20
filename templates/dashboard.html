@@ -64,15 +64,25 @@
         <!-- Grafik Batang Latensi -->
         <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 p-6 mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-semibold text-gray-300">Tren Rata-Rata Latensi Model (Per Menit)</h3>
-                
+                <h3 class="font-semibold text-gray-300">Tren Rata-Rata Latensi Model (Per 30 Menit Terakhir)</h3>                
                 <!-- Tombol Reload Manual khusus Chart menggunakan htmx v4 -->
                 <button 
                     hx-get="/dashboard/chart-data" 
                     hx-swap="none"
                     id="btn-refresh-chart"
                     class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-850 text-xs font-medium text-gray-200 rounded transition-colors flex items-center space-x-1 cursor-pointer">
-                    <span>🔄 Refresh Grafik</span>
+                    <svg xmlns="http://w3.org" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke-width="2" 
+                        stroke="currentColor" 
+                        class="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-180 transition-transform duration-500 ease-in-out">
+                        <path stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    
+                    <span>Refresh Grafik</span>
                 </button>
             </div>
             <div class="h-64 relative">
@@ -85,7 +95,20 @@
         <div class="bg-gray-800 rounded-xl shadow-xl border border-gray-700 overflow-hidden">
             <div class="p-4 bg-gray-850 border-b border-gray-700 flex justify-between items-center">
                 <h3 class="font-semibold text-gray-300">Riwayat Eksekusi Terbaru</h3>
-                <button hx-get="/dashboard/table" hx-target="#log-table-body" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs font-medium transition-colors">🔄 Refresh Manual</button>
+                <button hx-get="/dashboard/table" hx-target="#log-table-body" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 active:bg-gray-850 text-xs font-medium text-gray-200 rounded transition-colors flex items-center space-x-1 cursor-pointer">
+                    <svg xmlns="http://w3.org" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke-width="2" 
+                        stroke="currentColor" 
+                        class="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-180 transition-transform duration-500 ease-in-out">
+                        <path stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    
+                    <span>Refresh Manual</span>
+                </button>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -218,8 +241,10 @@
         );
 
         // 2. Sinkronisasi otomatis saat HTMX v4 melakukan swap tabel baru
-        document.body.addEventListener('htmx:after-swap', function(evt) {
-            if (evt.detail.target.id === 'log-table-body') {
+        htmx.on('htmx:after:swap', (evt) => {
+            let targetId = evt.detail.ctx.target.id;
+            console.log(targetId);
+            if (targetId === 'log-table-body') {
                 fetch('/dashboard/chart-data')
                     .then(response => response.json())
                     .then(data => {
