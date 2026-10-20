@@ -30,3 +30,43 @@ export OLLAMA_URL="http://localhost:11434"
 uvicorn app_fastapi:app --host 0.0.0.0 --port 8000 --reload
 
 
+NEW :
+Code Analysis(Escalation to a large model):
+-------------------------------------------
+ollama pull codegemma:2b
+python3 code_router.py
+
+Output:
+$ python3 code_router.py
+=== 🛠️ MEMULAI SIMULASI CODE ROUTING ===
+[*] Menguji potongan kode:
+
+    def hitung_mundur(n)
+        while n > 0
+            print(n)
+            n -= 1
+        print("Mulai!")
+    
+[>] Hasil Analisis Jev (tev1): Apakah kode rusak? -> 0.39923234341130515
+
+[!] PERINGATAN: Kode terdeteksi rusak murni!
+[✓] Respon berhasil diterima dari CodeGemma!                                           
+
+=== 💡 HASIL PERBAIKAN DARI LLM MAIN ENGINE ===
+```python
+    
+def hitung_mundur(n):
+    while n > 0:
+        print(n)
+        n -= 1
+    print("Mulai!")
+
+hitung_mundur(3)
+
+```
+
+Penjelasan:
+Pada kode di atas, perulangan while harus menggunakan kurung kurawal dan titik koma untuk memberikan blok yang dijalankan selama perulangan berjalan.
+
+Perbaikan:
+Pada kode di atas, kode di dalam perulangan while harus diberi indentasi (spasi) untuk memberikan jarak antara blok kode dan blok yang akan dieksekusi selama perulangan berjalan.
