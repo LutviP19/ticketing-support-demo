@@ -107,7 +107,7 @@ def get_latency_chart_data():
                 TO_CHAR(DATE_TRUNC('minute', created_at), 'HH24:MI') as minute_bucket,
                 ROUND(AVG(execution_time_ms)) as avg_latency
             FROM jev_execution_logs
-            WHERE created_at >= NOW() - INTERVAL '3000 minute'
+            WHERE created_at >= NOW() - INTERVAL '30 minute'
             GROUP BY minute_bucket
             ORDER BY minute_bucket ASC;
         """
