@@ -8,6 +8,8 @@ This repository leverages Ollama 0.35+ running a locally hosted tev1:0.8b classi
 
 ![Dashboard](/storage/dashboard.png)
 
+![Dashboard-Popup](/storage/dashboard_popup.png)
+
 
 🏗️ Project Architecture & Stack
 

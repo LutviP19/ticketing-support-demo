@@ -44,8 +44,9 @@
                 id="ticket-form" 
                 hx-post="/dashboard/submit" 
                 hx-target="#log-table-body" 
-                hx-swap="innerHTML"
-                hx-on::after-request="if(event.detail.successful) this.reset()"
+                hx-swap="innerHTML" 
+                hx-validate="true" 
+                hx-on:htmx:after:request="this.reset()" 
                 class="space-y-4">
                 <div>
                     <label for="user_message" class="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Pesan / Keluhan Pengguna</label>
@@ -262,9 +263,6 @@
                 initOrUpdateChart(data.labels, data.values);
             }
         });
-
-        
-
 
         /**
          * Fungsi untuk membuka popup modal dan menyuntikkan data log audit

@@ -28,3 +28,5 @@ export DB_CONFIG="dbname=ticketing_support user=postgres password=password123 ho
 export OLLAMA_URL="http://localhost:11434"
 
 uvicorn app_fastapi:app --host 0.0.0.0 --port 8000 --reload
+
+
